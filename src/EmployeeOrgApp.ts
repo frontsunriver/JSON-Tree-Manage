@@ -16,6 +16,11 @@ class EmployeeOrgApp {
 
     oldRoot: any;
     newRoot: any;
+
+    prevNodeEmPath: any = [];
+    prevNodeEmID: any;
+    prevNodeTmPath: any = [];
+    prevNodeTmID: any;
     
     constructor(ceo: Employee) {
         this.ceo = ceo;
@@ -25,11 +30,14 @@ class EmployeeOrgApp {
     }
 
     move(employeeID: number, supervisorID: number): void {
+        this.prevNodeEmID = employeeID;
+        this.prevNodeTmID = supervisorID;
         var nodeEm = this.root.first((obj: any) => {
             if( obj.model.uniqueId == employeeID) {
                 return obj;
             }
         });
+        this.prevNodeEmPath = nodeEm.getPath();
 
         this.prevEm = nodeEm;
 
@@ -38,6 +46,8 @@ class EmployeeOrgApp {
                 return obj;
             }
         });
+
+        this.prevNodeTmPath = nodeTm.getPath();
 
         this.prevTm = nodeTm;
 
@@ -51,15 +61,40 @@ class EmployeeOrgApp {
     }
 
     undo(): void {
-        /** Undo last move action */ 
-        this.root = this.oldRoot;
-        console.log(this.oldRoot);
+        var nodeEm = this.root.first((obj: any) => {
+            if( obj.model.uniqueId == this.prevNodeEmID) {
+                return obj;
+            }
+        });
 
+        nodeEm.drop();
+        var beforeParentNode = this.prevNodeEmPath[this.prevNodeEmPath.length - 2];
+        var currentParentNode = this.root.first((obj: any) => {
+            if( obj.model.uniqueId == beforeParentNode.model.uniqueId) {
+                return obj;
+            }
+        });
+        currentParentNode.addChild(nodeEm);
+        console.log(this.root.model);
     }  
     
     redo(): void {
-        this.root = this.newRoot;
-        console.log(this.newRoot);
+        var nodeEm = this.root.first((obj: any) => {
+            if( obj.model.uniqueId === this.prevNodeEmID) {
+                return obj;
+            }
+        });
+
+        nodeEm.drop();
+
+        var nodeTm = this.root.first((obj: any) => {
+            if( obj.model.uniqueId === this.prevNodeTmID) {
+                return obj;
+            }
+        });
+        console.log(nodeTm);
+        nodeTm.addChild(nodeEm);
+        console.log(this.root.model);
     }
 
     show(): void {
